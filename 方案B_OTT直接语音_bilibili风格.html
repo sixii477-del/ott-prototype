@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head><meta charset="UTF-8"><title>方案B - OTT直接语音 - bilibili OTT风格</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:#060A14;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;font-family:"PingFang SC","Microsoft YaHei",sans-serif;padding:20px 0;}
+.tv-wrap{display:flex;flex-direction:column;align-items:center;gap:16px;}
+.tv-frame{width:1280px;height:720px;border:8px solid #1A2236;border-radius:16px;overflow:hidden;position:relative;background:#0A0E1A;display:flex;flex-direction:column;}
+.danmu-bg{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;overflow:hidden;z-index:1;}
+.danmu{position:absolute;white-space:nowrap;color:#fff;opacity:0.06;font-size:14px;animation:danmu-move linear infinite;}
+@keyframes danmu-move{from{transform:translateX(1400px);}to{transform:translateX(-900px);}}
+.topbar{position:relative;z-index:10;height:60px;background:#0A0E1A;border-bottom:1px solid #1E2D45;display:flex;align-items:center;padding:0 24px;gap:16px;flex-shrink:0;}
+.logo{font-size:22px;font-weight:700;letter-spacing:1px;flex-shrink:0;user-select:none;}
+.logo .bi{color:#FB7299;}.logo .libili{color:#fff;}
+.search-wrap{display:flex;align-items:center;gap:8px;flex:1;justify-content:center;}
+.search-box{width:400px;height:36px;background:#141B2D;border-radius:20px;border:1px solid #1E2D45;display:flex;align-items:center;padding:0 14px;gap:8px;flex-shrink:0;}
+.search-icon{color:#8B9BB4;font-size:14px;}
+.search-box input{background:none;border:none;outline:none;color:#fff;font-size:14px;width:100%;}
+.search-box input::placeholder{color:#8B9BB4;}
+.scan-btn{background:#1A2236;border:1px solid #1E2D45;border-radius:8px;padding:5px 12px;display:flex;align-items:center;gap:5px;cursor:pointer;color:#8B9BB4;font-size:12px;flex-shrink:0;transition:border-color 0.2s;}
+.scan-btn:hover{border-color:#00AEEC;color:#00AEEC;}
+.avatar{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#00AEEC,#FB7299);flex-shrink:0;margin-left:auto;}
+.tabs{position:relative;z-index:10;height:40px;background:#0A0E1A;display:flex;align-items:center;padding:0 24px;gap:4px;flex-shrink:0;}
+.tab{padding:5px 16px;border-radius:4px;font-size:14px;cursor:pointer;color:#8B9BB4;transition:all 0.2s;}
+.tab.active{background:#00AEEC;color:#fff;}.tab:hover:not(.active){color:#fff;}
+.content-area{position:relative;z-index:10;flex:1;padding:12px 24px;display:grid;grid-template-columns:repeat(5,1fr);grid-template-rows:repeat(3,1fr);gap:10px;overflow:hidden;}
+.card{border-radius:8px;overflow:hidden;cursor:pointer;position:relative;background:#141B2D;display:flex;flex-direction:column;transition:transform 0.15s;}
+.card:hover{transform:scale(1.02);}
+.card-cover{flex:1;position:relative;min-height:0;}
+.card-tag{position:absolute;top:6px;left:6px;font-size:10px;padding:2px 6px;border-radius:3px;font-weight:600;z-index:2;}
+.tag-exclusive{background:#FB7299;color:#fff;}.tag-vip{background:#00AEEC;color:#fff;}
+.card-views{position:absolute;bottom:5px;right:6px;font-size:10px;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,0.9);z-index:2;}
+.card-info{padding:5px 8px;height:40px;flex-shrink:0;}
+.card-title{font-size:12px;color:#fff;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.card.selected{box-shadow:0 0 0 2px #00AEEC,0 0 14px rgba(0,174,236,0.6);}
+.statusbar{position:relative;z-index:10;height:36px;background:#060A14;display:flex;align-items:center;padding:0 24px;justify-content:space-between;flex-shrink:0;}
+.ctrl-hints{display:flex;align-items:center;gap:6px;}
+.ctrl-key{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border:1px solid #2A3A50;border-radius:4px;font-size:10px;color:#8B9BB4;}
+.hint-text{font-size:11px;color:#8B9BB4;}
+.mic-btn{width:48px;height:48px;border-radius:50%;background:#00AEEC;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;animation:pulse 2s ease-in-out infinite;position:relative;}
+.mic-label{font-size:10px;color:#8B9BB4;text-align:center;margin-top:2px;}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(0,174,236,0.4);}70%{box-shadow:0 0 0 16px rgba(0,174,236,0);}100%{box-shadow:0 0 0 0 rgba(0,174,236,0);}}
+.content-dimmed{filter:brightness(0.5);transition:filter 0.3s;}
+.voice-layer{display:none;position:absolute;bottom:0;left:0;width:100%;background:rgba(10,14,26,0.96);border-radius:16px 16px 0 0;z-index:50;padding:24px 32px;transition:height 0.3s;}
+.voice-layer.show{display:block;}
+.voice-layer.expanded{padding-bottom:16px;}
+.mic-big{width:60px;height:60px;border-radius:50%;background:#00AEEC;display:flex;align-items:center;justify-content:center;font-size:28px;margin:0 auto 16px;position:relative;animation:pulse 1.5s ease-in-out infinite;}
+.mic-big::before{content:"";position:absolute;width:80px;height:80px;border-radius:50%;border:2px solid rgba(0,174,236,0.3);animation:ripple1 1.5s ease-out infinite;}
+.mic-big::after{content:"";position:absolute;width:100px;height:100px;border-radius:50%;border:2px solid rgba(0,174,236,0.15);animation:ripple2 1.5s ease-out infinite 0.3s;}
+@keyframes ripple1{0%{transform:scale(0.8);opacity:1;}100%{transform:scale(1.4);opacity:0;}}
+@keyframes ripple2{0%{transform:scale(0.8);opacity:1;}100%{transform:scale(1.6);opacity:0;}}
+.wave-bars-big{display:flex;align-items:flex-end;gap:5px;height:48px;justify-content:center;margin-bottom:12px;}
+.bbar{width:8px;background:linear-gradient(to top,#00AEEC,#00D4FF);border-radius:4px;}
+@keyframes bwave{0%,100%{height:8px;}50%{height:40px;}}
+.bbar1{animation:bwave 0.7s ease-in-out infinite;}
+.bbar2{animation:bwave 0.7s ease-in-out infinite 0.1s;}
+.bbar3{animation:bwave 0.7s ease-in-out infinite 0.2s;}
+.bbar4{animation:bwave 0.7s ease-in-out infinite 0.3s;}
+.bbar5{animation:bwave 0.7s ease-in-out infinite 0.4s;}
+.bbar6{animation:bwave 0.7s ease-in-out infinite 0.5s;}
+.bbar7{animation:bwave 0.7s ease-in-out infinite 0.6s;}
+.voice-text{font-size:16px;color:#fff;text-align:center;margin-bottom:8px;}
+.voice-examples{font-size:12px;color:#8B9BB4;text-align:center;margin-bottom:16px;}
+.voice-cancel{position:absolute;top:20px;right:24px;width:36px;height:36px;border-radius:50%;background:#1A2236;border:none;cursor:pointer;color:#8B9BB4;font-size:16px;display:flex;align-items:center;justify-content:center;}
+.result-bubble{background:#1A2236;border-radius:8px;border-left:3px solid #00AEEC;padding:10px 14px;margin-bottom:16px;display:flex;align-items:center;gap:8px;}
+.bubble-icon{font-size:14px;color:#00AEEC;}
+.bubble-text{font-size:14px;color:#fff;}
+.result-title{font-size:13px;color:#8B9BB4;margin-bottom:12px;}
+.result-title .highlight{color:#00AEEC;background:rgba(0,174,236,0.1);padding:2px 8px;border-radius:4px;}
+.result-cards{display:flex;gap:10px;margin-bottom:16px;}
+.rcard{width:160px;flex-shrink:0;border-radius:8px;overflow:hidden;background:#141B2D;cursor:pointer;}
+.rcard-cover{height:100px;position:relative;}
+.rcard-tag{position:absolute;top:5px;left:5px;font-size:10px;padding:2px 5px;border-radius:3px;font-weight:600;}
+.rcard-views{position:absolute;bottom:4px;right:5px;font-size:10px;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,0.9);}
+.rcard-title{padding:5px 7px;font-size:12px;color:#fff;}
+.rcard.selected{box-shadow:0 0 0 2px #00AEEC,0 0 10px rgba(0,174,236,0.5);}
+.voice-bottom-hint{font-size:11px;color:#4A5A70;text-align:center;border-top:1px solid #1E2D45;padding-top:10px;}
+.history-bubble{background:#1A2236;border-radius:6px;padding:7px 12px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;opacity:0.7;}
+.history-text{font-size:12px;color:#8B9BB4;}
+.history-check{font-size:11px;color:#00C853;}
+.new-search-btn{position:absolute;top:16px;right:70px;background:#1A2236;border:1px solid #2A3A50;color:#8B9BB4;border-radius:4px;padding:4px 10px;font-size:12px;cursor:pointer;}
+.new-search-btn:hover{border-color:#00AEEC;color:#00AEEC;}
+.state-btns{display:flex;gap:8px;margin-top:12px;}
+.state-btn{background:#141B2D;border:1px solid #00AEEC;color:#fff;border-radius:4px;padding:8px 16px;font-size:13px;cursor:pointer;transition:all 0.2s;}
+.state-btn.active,.state-btn:hover{background:#00AEEC;color:#fff;}
+
+</style></head>
+<body>
+<div class="tv-wrap">
+<div class="tv-frame" id="tvFrame">
+<div class="danmu-bg"><div class="danmu" style="top:15%;animation-duration:8s;animation-delay:0s">这剧太好看了！！！</div><div class="danmu" style="top:35%;animation-duration:12s;animation-delay:3s">庆余年第三季什么时候出</div><div class="danmu" style="top:55%;animation-duration:10s;animation-delay:6s">前方高能！！</div><div class="danmu" style="top:72%;animation-duration:14s;animation-delay:1s">弹幕保护我</div></div>
+<!-- topbar -->
+<div class="topbar">
+<div class="logo"><span class="bi">bi</span><span class="libili">libili</span></div>
+<div class="search-wrap">
+<div class="search-box"><span class="search-icon">🔍</span><input type="text" placeholder="搜索 或 长按OK键语音搜索"></div>
+<div style="display:flex;flex-direction:column;align-items:center;gap:2px;">
+<button class="mic-btn" id="micBtn" onclick="setState(2)">🎤</button>
+<span class="mic-label">语音</span>
+</div>
+</div>
+<div class="avatar"></div>
+</div>
+<!-- tabs -->
+<div class="tabs">
+<div class="tab active">全部</div>
+<div class="tab">番剧</div>
+<div class="tab">影视</div>
+<div class="tab">纪录片</div>
+<div class="tab">综艺</div>
+<div class="tab">电影</div>
+</div>
+<!-- content area (dimmed in voice states) -->
+<div class="content-area" id="contentArea"><div class="card selected"><div class="card-cover" style="background:linear-gradient(135deg,#1a0533,#0d1b4b)"><span class="card-tag tag-exclusive">独家</span><span class="card-views">▶ 1.2亿</span></div><div class="card-info"><div class="card-title">庆余年</div></div></div><div class="card"><div class="card-cover" style="background:linear-gradient(135deg,#2d0a0a,#4a1a00)"><span class="card-tag tag-vip">会员</span><span class="card-views">▶ 8.9千万</span></div><div class="card-info"><div class="card-title">琅琊榜</div></div></div><div class="card"><div class="card-cover" style="background:linear-gradient(135deg,#0a2d1a,#003333)"><span class="card-tag tag-exclusive">独家</span><span class="card-views">▶ 15亿</span></div><div class="card-info"><div class="card-title">甄嬛传</div></div></div><div class="card"><div class="card-cover" style="background:linear-gradient(135deg,#0a0d2d,#1a0a3d)"><span class="card-tag tag-vip">会员</span><span class="card-views">▶ 6.3亿</span></div><div class="card-info"><div class="card-title">斗破苍穹</div></div></div><div class="card"><div class="card-cover" style="background:linear-gradient(135deg,#1a1a00,#2d2000)"><span class="card-tag tag-exclusive">独家</span><span class="card-views">▶ 4.1亿</span></div><div class="card-info"><div class="card-title">全职高手</div></div></div><div class="card"><div class="card-cover" style="background:linear-gradient(135deg,#2d0a1a,#1a0033)"><span class="card-tag tag-vip">会员</span><span class="card-views">▶ 2.8亿</span></div><div class="card-info"><div class="card-title">镇魂街</div></div></div><div class="card"><div class="card-cover" style="background:linear-gradient(135deg,#001a2d,#002d1a)"><span class="card-tag tag-exclusive">独家</span><span class="card-views">▶ 9.7千万</span></div><div class="card-info"><div class="card-title">天官赐福</div></div></div><div class="card"><div class="card-cover" style="background:linear-gradient(135deg,#1a0a00,#2d1500)"><span class="card-tag tag-vip">会员</span><span class="card-views">▶ 3.2亿</span></div><div class="card-info"><div class="card-title">人世间</div></div></div><div class="card"><div class="card-cover" style="background:linear-gradient(135deg,#0a1a2d,#001a33)"><span class="card-tag tag-exclusive">独家</span><span class="card-views">▶ 2.1亿</span></div><div class="card-info"><div class="card-title">山海情</div></div></div><div class="card"><div class="card-cover" style="background:linear-gradient(135deg,#1a0000,#330a00)"><span class="card-tag tag-vip">会员</span><span class="card-views">▶ 1.8亿</span></div><div class="card-info"><div class="card-title">觉醒年代</div></div></div><div class="card"><div class="card-cover" style="background:linear-gradient(135deg,#001a1a,#002233)"><span class="card-tag tag-exclusive">独家</span><span class="card-views">▶ 7.6亿</span></div><div class="card-info"><div class="card-title">陈情令</div></div></div><div class="card"><div class="card-cover" style="background:linear-gradient(135deg,#1a1a2d,#0a0a3d)"><span class="card-tag tag-vip">会员</span><span class="card-views">▶ 5.4亿</span></div><div class="card-info"><div class="card-title">知否知否</div></div></div><div class="card"><div class="card-cover" style="background:linear-gradient(135deg,#2d1a00,#3d2200)"><span class="card-tag tag-exclusive">独家</span><span class="card-views">▶ 3.9亿</span></div><div class="card-info"><div class="card-title">长安十二时辰</div></div></div><div class="card"><div class="card-cover" style="background:linear-gradient(135deg,#0a2d0a,#003300)"><span class="card-tag tag-vip">会员</span><span class="card-views">▶ 1.1亿</span></div><div class="card-info"><div class="card-title">古相思曲</div></div></div><div class="card"><div class="card-cover" style="background:linear-gradient(135deg,#1a002d,#2d0044)"><span class="card-tag tag-exclusive">独家</span><span class="card-views">▶ 2.6亿</span></div><div class="card-info"><div class="card-title">风起洛阳</div></div></div></div>
+<!-- statusbar -->
+<div class="statusbar">
+<div class="ctrl-hints">
+<span class="ctrl-key">↑</span><span class="ctrl-key">↓</span><span class="ctrl-key">←</span><span class="ctrl-key">→</span>
+<span class="ctrl-key">OK</span><span class="ctrl-key">返回</span>
+</div>
+<span class="hint-text">长按遥控器 ⊙ 键开始语音搜索</span>
+<span></span>
+</div>
+<!-- voice layer (states 2/3/4) -->
+<div class="voice-layer" id="voiceLayer">
+<button class="voice-cancel" onclick="setState(1)">✕</button>
+<!-- state 2: listening -->
+<div id="listeningView">
+<div class="mic-big">🎤</div>
+<div class="wave-bars-big">
+<div class="bbar bbar1"></div>
+<div class="bbar bbar2"></div>
+<div class="bbar bbar3"></div>
+<div class="bbar bbar4"></div>
+<div class="bbar bbar5"></div>
+<div class="bbar bbar6"></div>
+<div class="bbar bbar7"></div>
+</div>
+<div class="voice-text">正在聆听...</div>
+<div class="voice-examples">找部古装权谋剧 &nbsp;|&nbsp; 张若昀演的剧 &nbsp;|&nbsp; 适合全家看的电影</div>
+</div>
+<!-- state 3: result -->
+<div id="resultView" style="display:none">
+<div class="result-bubble"><span class="bubble-icon">🎤</span><span class="bubble-text">「 找一部像庆余年那样的古装权谋剧 」</span></div>
+<div class="result-title">为您找到 <span class="highlight">古装·权谋</span> 相关内容</div>
+<div class="result-cards"><div class="rcard selected"><div class="rcard-cover" style="background:linear-gradient(135deg,#1a0533,#0d1b4b)"><span class="rcard-tag tag-exclusive">独家</span><span class="rcard-views">▶ 1.2亿</span></div><div class="rcard-title">庆余年 第二季</div></div><div class="rcard"><div class="rcard-cover" style="background:linear-gradient(135deg,#2d0a0a,#4a1a00)"><span class="rcard-tag tag-vip">会员</span><span class="rcard-views">▶ 8.9千万</span></div><div class="rcard-title">琅琊榜</div></div><div class="rcard"><div class="rcard-cover" style="background:linear-gradient(135deg,#2d1a00,#3d2200)"><span class="rcard-tag tag-exclusive">独家</span><span class="rcard-views">▶ 3.9亿</span></div><div class="rcard-title">长安十二时辰</div></div><div class="rcard"><div class="rcard-cover" style="background:linear-gradient(135deg,#1a002d,#2d0044)"><span class="rcard-tag tag-vip">会员</span><span class="rcard-views">▶ 2.6亿</span></div><div class="rcard-title">风起洛阳</div></div></div>
+<div class="voice-bottom-hint">继续说可以追问 &nbsp;|&nbsp; ← → 选择 &nbsp;|&nbsp; ⊙ 播放 &nbsp;|&nbsp; 返回 退出</div>
+</div>
+<!-- state 4: follow-up -->
+<div id="followupView" style="display:none">
+<button class="new-search-btn" onclick="setState(2)">新搜索</button>
+<div class="history-bubble"><span class="history-text">找一部像庆余年那样的古装权谋剧</span><span class="history-check">✓ 已识别</span></div>
+<div class="result-bubble"><span class="bubble-icon">🎤</span><span class="bubble-text">「 换个女主角是主角的 」</span></div>
+<div class="result-title">为您找到 <span class="highlight">古装·女主</span> 相关内容</div>
+<div class="result-cards"><div class="rcard selected"><div class="rcard-cover" style="background:linear-gradient(135deg,#0a2d1a,#003333)"><span class="rcard-tag tag-exclusive">独家</span><span class="rcard-views">▶ 15亿</span></div><div class="rcard-title">甄嬛传</div></div><div class="rcard"><div class="rcard-cover" style="background:linear-gradient(135deg,#1a1a2d,#0a0a3d)"><span class="rcard-tag tag-vip">会员</span><span class="rcard-views">▶ 5.4亿</span></div><div class="rcard-title">知否知否</div></div><div class="rcard"><div class="rcard-cover" style="background:linear-gradient(135deg,#001a1a,#002233)"><span class="rcard-tag tag-exclusive">独家</span><span class="rcard-views">▶ 7.6亿</span></div><div class="rcard-title">陈情令</div></div><div class="rcard"><div class="rcard-cover" style="background:linear-gradient(135deg,#001a2d,#002d1a)"><span class="rcard-tag tag-vip">会员</span><span class="rcard-views">▶ 9.7千万</span></div><div class="rcard-title">天官赐福</div></div></div>
+<div class="voice-bottom-hint">继续说可以追问 &nbsp;|&nbsp; ← → 选择 &nbsp;|&nbsp; ⊙ 播放 &nbsp;|&nbsp; 返回 退出</div>
+</div>
+</div>
+</div>
+</div>
+<!-- state buttons -->
+<div class="state-btns">
+<button class="state-btn active" id="btn1" onclick="setState(1)">状态1: 首页</button>
+<button class="state-btn" id="btn2" onclick="setState(2)">状态2: 语音监听</button>
+<button class="state-btn" id="btn3" onclick="setState(3)">状态3: 识别结果</button>
+<button class="state-btn" id="btn4" onclick="setState(4)">状态4: 多轮追问</button>
+</div>
+</div>
+<script>
+var state = 1;
+function setState(n) {
+  state = n;
+  var vl = document.getElementById("voiceLayer");
+  var ca = document.getElementById("contentArea");
+  var lv = document.getElementById("listeningView");
+  var rv = document.getElementById("resultView");
+  var fv = document.getElementById("followupView");
+  if(n===1){
+    vl.classList.remove("show");
+    ca.classList.remove("content-dimmed");
+  } else {
+    vl.classList.add("show");
+    ca.classList.add("content-dimmed");
+  }
+  lv.style.display = n===2 ? "block" : "none";
+  rv.style.display = n===3 ? "block" : "none";
+  fv.style.display = n===4 ? "block" : "none";
+  if(n===2){ vl.style.height="33%"; } else { vl.style.height="50%"; }
+  [1,2,3,4].forEach(function(i){
+    var b = document.getElementById("btn"+i);
+    if(b) b.classList.toggle("active", i===n);
+  });
+}
+</script>
+</body></html>
